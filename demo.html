@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search Filter Demo</title>
+  </head>
+  <body>
+    <h1>Search Filter Demo</h1>
+
+    <div>
+      <div id="research-projects-list">
+        <h2>Research Projects</h2>
+        <p>Search to view projects by topic/tag or theme, and toggle between current and archived projects.</p>
+      </div>
+
+      <div>
+        <form>
+
+          <div>
+            <input id="project-search" type="text" placeholder="Search by Keyword" />
+          </div>
+
+          <div>
+            <select id="project-theme">
+              <option value="all" selected>Select by Theme</option>
+            </select>
+          </div>
+
+          <div>
+            <select id="project-status">
+              <option selected="selected" value="current">Current</option>
+              <option value="past">Past</option>
+            </select>
+          </div>
+
+        </form>
+      </div>
+
+      <div>
+        <div id="project-list"></div>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <script>
+    var themes = ['theme1', 'theme2', 'theme3', 'theme4', 'theme5', 'theme6'];
+
+    themes.sort();
+
+    var projects = [
+      {
+        title: "Title 1",
+        link: "#",
+        status: 'current',
+        tags: "tag1 tag2 tag3",
+        themes: ["theme1", "theme2"]
+      },
+      {
+        title: "Title 2",
+        link: "#",
+        status: 'past',
+        tags: "tag1 tag3",
+        themes: ["theme2", "theme3", "theme5"]
+      },
+      {
+        title: "Title 3",
+        link: "#",
+        status: 'past',
+        tags: "tag1 tag2 tag5",
+        themes: ["theme1", "theme4"]
+      },
+      {
+        title: "Title 4",
+        link: "#",
+        status: 'current',
+        tags: "tag1 tag3 tag4",
+        themes: ["theme4", "theme5"]
+      },
+      {
+        title: "Title 5",
+        link: "#",
+        status: 'current',
+        tags: "tag1 tag2 tag3 tag4 tag5",
+        themes: ["theme3"]
+      },
+      {
+        title: "Title 6",
+        link: "#",
+        status: 'current',
+        tags: "tag1 tag2",
+        themes: ["theme6"]
+      }
+    ];
+
+
+    (function() {
+      var projectSearch = document.getElementById('project-search'),
+          projectTheme = document.getElementById('project-theme'),
+          projectStatus = document.getElementById('project-status');
+
+      // Create theme options
+      createThemeOptions(themes);
+
+      // Create current projects
+      createProjects(projects, '', 'all', 'current');
+
+      // Select by keywords
+      projectSearch.oninput = function() {
+        createProjects(projects, this.value, projectTheme.value, projectStatus.value);
+      }
+
+      // Select by themes
+      projectTheme.onchange = function() {
+        createProjects(projects, projectSearch.value, this.value, projectStatus.value);
+      }
+
+      // Select current or past projects
+      projectStatus.onchange = function () {
+        createProjects(projects, projectSearch.value, projectTheme.value, this.value);
+      }
+
+    })();
+
+
+    /* Create theme options */
+    function createThemeOptions(themes) {
+      for (var i = 0; i < themes.length; i++) {
+        var option = document.createElement('option');
+        option.setAttribute('value', getSlug(themes[i]));
+        option.appendChild( document.createTextNode(themes[i]) );
+        document.getElementById('project-theme').appendChild(option);
+      }
+    }
+
+
+    /* Create projects */
+    function createProjects(projects, keyword, theme, status) {
+      var projectList = document.getElementById('project-list');
+      var project, div, link, h3;
+
+      // shallow copy of projects
+      var filteredProjects = projects.slice(0);
+
+      if (keyword.length > 0) {
+        filteredProjects = filteredProjects.filter(function(project) {
+          
+          if ( project.tags.toLowerCase().includes(keyword.toLowerCase()) || project.title.toLowerCase().includes(keyword.toLowerCase()) ) {
+            return project;
+          }
+        });
+      }
+
+      if (theme !== 'all') {
+        filteredProjects = filteredProjects.filter(function(project) {
+          if ( project.themes.map(getSlug).includes(theme) ) return project;
+        });
+      }
+
+      filteredProjects = filteredProjects.filter(function(project) {
+        if ( project.status === status ) return project;
+      });
+
+      projectList.innerHTML = '';
+      
+      if (filteredProjects.length === 0) {
+        div = document.createElement('div');
+        //div.setAttribute('style', 'color:#fff; text-align:center');
+        div.appendChild( document.createTextNode('No projects found.') );
+
+        projectList.appendChild(div);
+      } else {
+        for (var i = 0; i < filteredProjects.length; i++) {
+          project = filteredProjects[i];
+
+          div = document.createElement('div');
+
+          if (project.status === status) {
+            div.setAttribute('class', 'one-half box');
+          }
+
+          link = document.createElement('a');
+          link.setAttribute('href', project.link);
+
+          h3 = document.createElement('h3');
+          h3.setAttribute('class', 'box-name');
+          h3.appendChild( document.createTextNode(project.title) );
+          link.appendChild(h3);
+
+          div.appendChild(link);
+
+          projectList.appendChild(div);
+        }
+      }
+
+    }
+
+    /* Get a slug text */
+    function getSlug(text) {
+      return text.replace(/\s+/g, '-').toLowerCase();
+    }
+    </script>
+
+  </body>
+</html>
